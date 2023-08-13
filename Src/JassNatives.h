@@ -69,7 +69,7 @@ namespace Jass {
 
 		DWORD Invoke(LPVOID params, size_t size);
 	private:
-		size_t m_realsCount;
+		size_t m_realsCount{ 0 };
 		PVOID m_address;
 		std::vector<std::string> m_params;
 		std::string m_returntype;

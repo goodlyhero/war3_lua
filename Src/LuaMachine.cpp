@@ -18,12 +18,19 @@ namespace LuaMachine {
 
 	//----------------------------------------------------------
 
-	lua_State* GetMainState(bool init) {
+	lua_State* GetMainState(bool init,bool game) {
 		if (!mainState && init) {
 			lua_State* l = mainState = luaL_newstate();
+			int top = lua_gettop(l);
+
 			luaL_openlibs(l);
 			LuaHooks::lua_replaceSearchers(l);
+			if (game) {
+				LuaHooks::lua_replaceGameGlobals(l);
+			}
+			else {
 			LuaHooks::lua_replaceGlobals(l);
+			}
 
 			if (!developerMode) {
 				LuaHooks::lua_disableFunctions(l);
@@ -33,6 +40,9 @@ namespace LuaMachine {
 			LuaFunctions::lua_openJassNatives(l);
 			LuaFunctions::lua_openExternalFunctions(l);
 			LuaFunctions::lua_openJassVariables(l);
+
+			lua_settop(l, top);
+
 		}
 
 		return mainState;
@@ -46,12 +56,12 @@ namespace LuaMachine {
 			LuaMachine::HandleMetatablesReset();
 		}
 
-		Logger::ClearConsole();
 	}
 
-	void StartLua() {
-		lua_State* l = GetMainState();
+	void StartLuaConfig() {
+		lua_State* l = GetMainState(true,false);
 		Storm::Archive map;
+		int top = lua_gettop(l);
 		map.Connect(*(HANDLE*)pOffsets[(UINT)Offset::LastPlayedMap]);
 		if (!map["war3map.lua"].empty()) {
 			lua_pushcfunction(l, stacktrace);
@@ -59,11 +69,48 @@ namespace LuaMachine {
 			lua_pushstring(l, "war3map");
 			if (lua_pcall(l, 1, 0, -3) != LUA_OK) {
 				lua_throwerr(l);
+			}
+			else {
+				lua_pushcfunction(l, stacktrace);
+				lua_getglobal(l, "config");
+				if (lua_isfunction(l, -1)) {
+					if (lua_pcall(l, 0, 0, -2) != LUA_OK) {
+						
+					}
+				}
+			}
+
+		}
+		lua_settop(l, top);
+	}
+
+	void StartLuaGame() {
+		lua_State* l = GetMainState(true,true);
+		int top = lua_gettop(l);
+		Storm::Archive map;
+		map.Connect(*(HANDLE*)pOffsets[(UINT)Offset::LastPlayedMap]);
+		if (!map["war3map.lua"].empty()) {
+			lua_pushcfunction(l, stacktrace);
+			lua_getglobal(l, "require");
+			lua_pushstring(l, "war3map");
+			if (lua_pcall(l, 1, 0, -3) != LUA_OK) {
+				lua_throwerrChat(l);
 				lua_pop(l, 1);
+			}
+			else {
+				lua_pushcfunction(l, stacktrace);
+				lua_getglobal(l, "main");
+				if (lua_isfunction(l, -1)) {
+					if (lua_pcall(l, 0, 0, -2) != LUA_OK) {
+						lua_throwerrChat(l);
+						lua_pop(l, 1);
+					}
+				}
 			}
 
 			lua_pop(l, 1);
 		}
+		lua_settop(l, top);
 	}
 
 	BOOL __stdcall StartLuaThread() {
@@ -71,7 +118,7 @@ namespace LuaMachine {
 		JassMachine::PJASS_STACK stack = JassVM->stack;
 		BOOL result = TRUE;
 
-		lua_State* l = GetMainState(false);
+		lua_State* l = GetMainState(false,false);
 		GetFunctionByKey(l, stack->Pop()->value);
 		GetGlobalTable(l, "_LUA_THREADS", true, false);
 		lua_pushvalue(l, -2);
@@ -235,9 +282,14 @@ namespace LuaMachine {
 
 	//----------------------------------------------------------
 
-	void lua_throwerr(lua_State* l) {
+	void lua_throwerrChat(lua_State* l) {
 		std::string error = lua_tostring(l, -1);
 		Warcraft::PrintChat((Logger::Log(error, Logger::LEVEL::LOG_ERROR) + error).data(), 100);
+	}
+
+	void lua_throwerr(lua_State* l) {
+		std::string error = lua_tostring(l, -1);
+		Logger::Log(error, Logger::LEVEL::LOG_ERROR);
 	}
 
 	void lua_throwWarning(lua_State* l, std::string msg) {

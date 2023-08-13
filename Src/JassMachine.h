@@ -68,7 +68,7 @@ enum class OPCODE_VARIABLE : BYTE {
 };
 
 namespace JassMachine {
-	typedef struct {
+	typedef struct JASS_DATA_SLOT {
 		DWORD unk;
 		DWORD zero1;
 		DWORD zero2;
@@ -88,7 +88,7 @@ namespace JassMachine {
 
 	} JASS_DATA_SLOT, * PJASS_DATA_SLOT;
 
-	typedef struct {
+	typedef struct JASS_STACK {
 	private:
 		DWORD unk1;
 		DWORD unk2;
@@ -132,7 +132,7 @@ namespace JassMachine {
 		UINT unk2;
 	} RCString, * PRCString;
 
-	typedef struct {
+	typedef struct STRING_TABLE {
 		DWORD unk;
 		size_t size;
 		PRCString strings;
@@ -165,7 +165,7 @@ namespace JassMachine {
 
 	} STRING_TABLE, * PSTRING_TABLE;
 
-	typedef struct {
+	typedef struct CODE_TABLE{
 		BYTE unk[4];
 		size_t counter;
 		DWORD* codes; // max_size = 1024
@@ -282,7 +282,7 @@ namespace JassMachine {
 
 	PJASS_INSTANCE GetJassInstance();
 
-	typedef struct {
+	typedef struct JASS_OPLIST {
 	private:
 		std::vector<JASS_OPCODE> oplist;
 	public:

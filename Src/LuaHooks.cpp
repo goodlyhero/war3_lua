@@ -409,17 +409,24 @@ namespace LuaHooks {
 
 	//---------------------------------------------------------------------------------
 
+	void lua_replacePrint(lua_State* l) {
+		lua_pushcfunction(l, lua_print);
+		lua_setglobal(l, "print");
+	}
+
 	void lua_replaceGlobals(lua_State* l) {
 		lua_pushcfunction(l, lua_printc);
 		lua_setglobal(l, "printc");
-
-		lua_pushcfunction(l, lua_print);
-		lua_setglobal(l, "print");
 
 		lua_pushcfunction(l, luaB_getmetatable);
 		lua_setglobal(l, "getmetatable");
 
 		lua_pushcfunction(l, luaB_type);
 		lua_setglobal(l, "type");
+	}
+
+	void lua_replaceGameGlobals(lua_State* l) {
+		lua_replaceGlobals(l);
+		lua_replacePrint(l);
 	}
 }

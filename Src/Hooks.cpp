@@ -61,7 +61,7 @@ namespace Hooks {
 	}
 
 	BOOL __fastcall GlobalDeallocator(UINT handle) {
-		lua_State* l = LuaMachine::GetMainState(false);
+		lua_State* l = LuaMachine::GetMainState(false,false);
 		if (l) {
 			LuaMachine::DeleteUserdataByHandle(l , handle);
 		}
@@ -78,9 +78,17 @@ namespace Hooks {
 	BOOL __fastcall CGameEventHandler(CObserver* observer, PVOID, CEvent* cevent) {
 		if (observer && cevent) {
 			switch (cevent->id) {
+			case 1: {
+				if (LuaMachine::GetMainState(false,false)) {
+					LuaMachine::DestroyLua();
+				}
+				LuaMachine::StartLuaConfig();
+				break;
+			}
 			case (UINT)EventTypes::EVENT_CNET_GAME_START:
 				if (*observer->registry & 0x100800) { // When map loading finished (000100000000100000000000)
-					LuaMachine::StartLua();
+					LuaMachine::DestroyLua();
+					LuaMachine::StartLuaGame();
 				}
 
 				break;
@@ -206,7 +214,6 @@ namespace Hooks {
 						if (!Logger::isConsole) {
 							Logger::OpenConsole(developerMode ? "(UjAPI) Lua Console [Developer]" : "(UjAPI) Lua Console");
 
-							system("cls");
 							Logger::Log(Utils::format("%s\n%s (%s)\n", LUA_COPYRIGHT, WAR3_LUA, WAR3_LUA_VERSION_NAME));
 						}
 						else {

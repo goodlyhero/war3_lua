@@ -157,7 +157,7 @@ namespace LuaFunctions {
 		if (!native.IsValid()) {
 			return 0;
 		}
-		
+
 		const std::vector<std::string>& paramsTypes = native.GetParams();
 		std::size_t size = paramsTypes.size();
 		std::size_t realsCount = native.GetRealsCount();
@@ -169,62 +169,62 @@ namespace LuaFunctions {
 		for (const auto& type : native.GetParams()) {
 			if (isupper(type[0])) {
 				switch (type[0]) {
-					case 'C':
-						if (lua_isfunction(l, i)) {
-							params[i - 1] = Jass::ToCode(l, i, 1);
-						}
-						else if (luaL_testudata(l, i, "code")) {
-							params[i - 1] = *(DWORD*)lua_touserdata(l, i);
-						}
-						else {
-							return luaL_typeerror(l, i, "function or code");
-						}
-
-						break;
-					case 'B':
-						if (lua_isboolean(l, i)) {
-							params[i - 1] = (DWORD)lua_toboolean(l, i);
-						}
-						else {
-							return luaL_typeerror(l, i, "boolean");
-						}
-
-						break;
-					case 'I':
-						if (lua_isinteger(l, i)) {
-							params[i - 1] = (DWORD)lua_tointeger(l, i);
-						}
-						else {
-							return luaL_typeerror(l, i, "integer");
-						}
-
-						break;
-					case 'R': {
-						if (lua_isnumber(l, i)) {
-							--realsCount;
-
-							*(float*)(&params[size + realsCount]) = (float)lua_tonumber(l, i);
-							params[i - 1] = (DWORD)&params[size + realsCount];
-						}
-						else {
-							return luaL_typeerror(l, i, "number");
-						}
-
-						break;
+				case 'C':
+					if (lua_isfunction(l, i)) {
+						params[i - 1] = Jass::ToCode(l, i, 1);
 					}
-					case 'S':
-						if (lua_isstring(l, i)) {
-							params[i - 1] = (UINT)&JassMachine::GetJassMachine()->string_table->GetRCString(Jass::ToString(lua_tostring(l, i)));
-						}
-						else {
-							return luaL_typeerror(l, i, "string");
-						}
+					else if (luaL_testudata(l, i, "code")) {
+						params[i - 1] = *(DWORD*)lua_touserdata(l, i);
+					}
+					else {
+						return luaL_typeerror(l, i, "function or code");
+					}
 
-						break;
-					default:
-						params[i - 1] = NULL;
+					break;
+				case 'B':
+					if (lua_isboolean(l, i)) {
+						params[i - 1] = (DWORD)lua_toboolean(l, i);
+					}
+					else {
+						return luaL_typeerror(l, i, "boolean");
+					}
 
-						break;
+					break;
+				case 'I':
+					if (lua_isinteger(l, i)) {
+						params[i - 1] = (DWORD)lua_tointeger(l, i);
+					}
+					else {
+						return luaL_typeerror(l, i, "integer");
+					}
+
+					break;
+				case 'R': {
+					if (lua_isnumber(l, i)) {
+						--realsCount;
+
+						*(float*)(&params[size + realsCount]) = (float)lua_tonumber(l, i);
+						params[i - 1] = (DWORD)&params[size + realsCount];
+					}
+					else {
+						return luaL_typeerror(l, i, "number");
+					}
+
+					break;
+				}
+				case 'S':
+					if (lua_isstring(l, i)) {
+						params[i - 1] = (UINT)&JassMachine::GetJassMachine()->string_table->GetRCString(Jass::ToString(lua_tostring(l, i)));
+					}
+					else {
+						return luaL_typeerror(l, i, "string");
+					}
+
+					break;
+				default:
+					params[i - 1] = NULL;
+
+					break;
 				}
 			}
 			else {
@@ -266,9 +266,10 @@ namespace LuaFunctions {
 			i++;
 		}
 
-		if (name == "Player" && params[0] > 15) {
-			return luaL_error(l, "player expected index from 0 to 15, received: %d", params[0]);
-		}
+		// //params not initialized!
+		//if (params[0] > 15 && name == "Player" ) {
+		//	return luaL_error(l, "player expected index from 0 to 15, received: %d", params[0]);
+		//}
 
 		BOOL result = native.Invoke(params, size);
 		delete[] params;
@@ -277,29 +278,29 @@ namespace LuaFunctions {
 		const std::string& return_type = native.GetReturnType();
 		if (isupper(return_type[0])) {
 			switch (return_type[0]) {
-				case 'B':
-					lua_pushboolean(l, result);
+			case 'B':
+				lua_pushboolean(l, result);
 
-					break;
-				case 'I':
-					lua_pushinteger(l, result);
+				break;
+			case 'I':
+				lua_pushinteger(l, result);
 
-					break;
-				case 'C':
-					lua_pushinteger(l, result);
+				break;
+			case 'C':
+				lua_pushinteger(l, result);
 
-					break;
-				case 'R':
-					lua_pushnumber(l, Jass::FromReal(result));
+				break;
+			case 'R':
+				lua_pushnumber(l, Jass::FromReal(result));
 
-					break;
-				case 'S':
-					lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(result));
-					//lua_pushstring(l, Jass::FromString(JassMachine::GetJassMachine()->string_table->Get(result)));
+				break;
+			case 'S':
+				lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(result));
+				//lua_pushstring(l, Jass::FromString(JassMachine::GetJassMachine()->string_table->Get(result)));
 
-					break;
-				default:
-					return 0;
+				break;
+			default:
+				return 0;
 			}
 		}
 		else {
@@ -340,7 +341,7 @@ namespace LuaFunctions {
 			else {
 				// No value, have native
 
-				const char *callNativeName = lua_tostring(l, 2);
+				const char* callNativeName = lua_tostring(l, 2);
 
 				lua_pop(l, 3);
 
@@ -377,7 +378,7 @@ namespace LuaFunctions {
 		// 2 - arg key
 		// 3 - arg value
 
-		LuaMachine::GetGlobalTable(l, "_HANDLE_KEY_STORAGE", true, true); // 4 -  Global table
+		LuaMachine::GetGlobalTable(l, "_HANDLE_KEY_STORAGE", true, false); // 4 -  Global table
 
 		lua_pushvalue(l, 1);
 		lua_rawget(l, -2);
@@ -420,14 +421,14 @@ namespace LuaFunctions {
 
 		UINT handle = *(UINT*)lua_touserdata(l, 1);
 
-		std::string string = !developerMode ? 
-							 Utils::format("%s: %08X", lua_tostring(l, 2), handle) : 
-							 Utils::format("%s: %08X | %08X", lua_tostring(l, 2), handle, Warcraft::ConvertHandle(handle));
+		std::string string = !developerMode ?
+			Utils::format("%s: %08X", lua_tostring(l, 2), handle) :
+			Utils::format("%s: %08X | %08X", lua_tostring(l, 2), handle, Warcraft::ConvertHandle(handle));
 
 		lua_pop(l, 1);
-	
+
 		lua_pushstring(l, string.data());
-	
+
 		return 1;
 	}
 
@@ -468,7 +469,7 @@ namespace LuaFunctions {
 					if (!native.second.GetParams().empty()) {
 
 						const std::string& firstArgType = native.second.GetParams()[0];
-						
+
 						if (IsChild(firstArgType, type.first)) {
 							lua_pushJassNative(l, native.first.data(), &native.second, lua_invokeNative);
 							lua_setfield(l, -2, native.first.data());
@@ -488,7 +489,7 @@ namespace LuaFunctions {
 
 		for (auto& native : Jass::jassnatives) {
 			lua_registerJassNative(l, native.first.data(), &native.second, lua_invokeNative);
-		}	
+		}
 	}
 
 	int lua_getJassArrayElement(lua_State* l) {
@@ -509,37 +510,37 @@ namespace LuaFunctions {
 
 		switch ((OPCODE_VARIABLE)variable->retType)
 		{
-			case OPCODE_VARIABLE::TYPE_INTEGER_ARRAY: {
-				lua_pushinteger(l, jarray->list.value[index]);
+		case OPCODE_VARIABLE::TYPE_INTEGER_ARRAY: {
+			lua_pushinteger(l, jarray->list.value[index]);
 
-				break;
-			}
-			case OPCODE_VARIABLE::TYPE_REAL_ARRAY: {
-				lua_pushnumber(l, Jass::FromReal(jarray->list.value[index]));
+			break;
+		}
+		case OPCODE_VARIABLE::TYPE_REAL_ARRAY: {
+			lua_pushnumber(l, Jass::FromReal(jarray->list.value[index]));
 
-				break;
-			}
-			case OPCODE_VARIABLE::TYPE_STRING_ARRAY: {
-				lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(jarray->list.value[index]));
+			break;
+		}
+		case OPCODE_VARIABLE::TYPE_STRING_ARRAY: {
+			lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(jarray->list.value[index]));
 
-				break;
-			}
-			case OPCODE_VARIABLE::TYPE_HANDLE_ARRAY: {
-				LuaMachine::GetUserdataByHandle(l, jarray->list.value[index], "handle");
+			break;
+		}
+		case OPCODE_VARIABLE::TYPE_HANDLE_ARRAY: {
+			LuaMachine::GetUserdataByHandle(l, jarray->list.value[index], "handle");
 
-				break;
-			}
-			case OPCODE_VARIABLE::TYPE_BOOLEAN_ARRAY: {
-				lua_pushboolean(l, jarray->list.value[index]);
+			break;
+		}
+		case OPCODE_VARIABLE::TYPE_BOOLEAN_ARRAY: {
+			lua_pushboolean(l, jarray->list.value[index]);
 
-				break;
-			}
+			break;
+		}
 
-			default: {
-				lua_pushnil(l);
+		default: {
+			lua_pushnil(l);
 
-				break;
-			}
+			break;
+		}
 		}
 
 		return 1;
@@ -575,42 +576,42 @@ namespace LuaFunctions {
 		if (type < OPCODE_VARIABLE::TYPE_INTEGER_ARRAY) {
 			switch (type)
 			{
-				case OPCODE_VARIABLE::TYPE_CODE: {
-					LuaMachine::GetUserdataByHandle(l, variable->value, "code");
+			case OPCODE_VARIABLE::TYPE_CODE: {
+				LuaMachine::GetUserdataByHandle(l, variable->value, "code");
 
-					break;
-				}
-				case OPCODE_VARIABLE::TYPE_INTEGER: {
-					lua_pushinteger(l, variable->value);
+				break;
+			}
+			case OPCODE_VARIABLE::TYPE_INTEGER: {
+				lua_pushinteger(l, variable->value);
 
-					break;
-				}
-				case OPCODE_VARIABLE::TYPE_REAL: {
-					lua_pushnumber(l, Jass::FromReal(variable->value));
+				break;
+			}
+			case OPCODE_VARIABLE::TYPE_REAL: {
+				lua_pushnumber(l, Jass::FromReal(variable->value));
 
-					break;
-				}
-				case OPCODE_VARIABLE::TYPE_STRING: {
-					lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(variable->value));
+				break;
+			}
+			case OPCODE_VARIABLE::TYPE_STRING: {
+				lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(variable->value));
 
-					break;
-				}
-				case OPCODE_VARIABLE::TYPE_HANDLE: {
-					LuaMachine::GetUserdataByHandle(l, variable->value, "handle");
+				break;
+			}
+			case OPCODE_VARIABLE::TYPE_HANDLE: {
+				LuaMachine::GetUserdataByHandle(l, variable->value, "handle");
 
-					break;
-				}
-				case OPCODE_VARIABLE::TYPE_BOOLEAN: {
-					lua_pushboolean(l, variable->value);
+				break;
+			}
+			case OPCODE_VARIABLE::TYPE_BOOLEAN: {
+				lua_pushboolean(l, variable->value);
 
-					break;
-				}
+				break;
+			}
 
-				default: {
-					lua_pushnil(l);
+			default: {
+				lua_pushnil(l);
 
-					break;
-				}
+				break;
+			}
 			}
 		}
 		else {
@@ -672,7 +673,7 @@ namespace LuaFunctions {
 		lua_setmetatable(l, -2);
 		lua_pop(l, 1);
 
-		
+
 	}
 
 	//--------------------------------------------------------
